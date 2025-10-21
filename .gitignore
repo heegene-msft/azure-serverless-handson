@@ -1,0 +1,58 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+build/
+dist/
+*.egg-info/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Terraform
+terraform/.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+.terraform.lock.hcl
+crash.log
+
+# Azure Functions
+src/functions/.python_packages/
+src/functions/.venv/
+src/functions/__blobstorage__/
+src/functions/__queuestorage__/
+src/functions/__azurite_db*__.json
+src/functions/.funcignore
+
+# Environment
+.env
+.env.local
+local.settings.json
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Logs
+*.log
+logs/
+
+# Test outputs
+test-results/
+coverage.xml
+.pytest_cache/
+
+# Temporary files
+*.tmp
+*.bak
+temp/
