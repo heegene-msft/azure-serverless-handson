@@ -1,0 +1,5 @@
+# Azure Functions Python Requirements
+azure-functions>=1.18.0
+azure-cosmos>=4.5.0
+azure-eventhub>=5.11.0
+azure-identity>=1.15.0

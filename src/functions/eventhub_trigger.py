@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 
 @app.event_hub_message_trigger(
     arg_name="events",
-    event_hub_name="telemetry-hub",
+    event_hub_name="order_events",
     connection="EventHubConnection"
 )
 @app.cosmos_db_output(
@@ -32,8 +32,6 @@ def eventhub_trigger_processor(
     """
     Event Hub Trigger Function
     Event Hub에서 메시지를 받아 Cosmos DB에 저장
-    
-    AWS Kinesis Stream → Lambda 패턴과 동일한 역할
     """
     logger.info(f'EventHub trigger function processing {len(events)} events')
     
@@ -50,7 +48,7 @@ def eventhub_trigger_processor(
             sequence_number = event.sequence_number
             enqueued_time = event.enqueued_time
             
-            # Cosmos DB 문서 생성
+            # 문서 생성
             document = {
                 "id": event_data.get("id", f"evt-{sequence_number}"),
                 "deviceId": event_data.get("deviceId", "unknown"),

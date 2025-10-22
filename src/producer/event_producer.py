@@ -191,23 +191,38 @@ class AsyncEventProducer:
             return sent_count
 
 
-# CLI 실행 예제
+# CLI 실행 예제 - Azure AD 인증 사용
 if __name__ == "__main__":
     import os
+    from dotenv import load_dotenv
     from azure.eventhub import EventHubProducerClient
+    from azure.identity import DefaultAzureCredential
     
-    # 환경변수 확인
-    connection_string = os.getenv("EVENTHUB_CONNECTION_STRING")
-    eventhub_name = os.getenv("EVENTHUB_NAME", "telemetry-hub")
+    # .env 파일 로드
+    load_dotenv()
     
-    if not connection_string:
-        print("Error: EVENTHUB_CONNECTION_STRING not set")
+    # 환경변수 확인 (Azure AD 인증용)
+    eventhub_namespace = os.getenv("EVENTHUB_NAMESPACE")
+    eventhub_name = os.getenv("EVENTHUB_NAME", "telemetry_events")
+    
+    if not eventhub_namespace:
+        print("Error: EVENTHUB_NAMESPACE not set")
+        print("Please check your .env file")
+        print("Example: EVENTHUB_NAMESPACE=your-namespace.servicebus.windows.net")
         exit(1)
     
-    # Producer 생성
-    producer_client = EventHubProducerClient.from_connection_string(
-        conn_str=connection_string,
-        eventhub_name=eventhub_name
+    print(f"✅ Event Hub Namespace: {eventhub_namespace}")
+    print(f"✅ Event Hub Name: {eventhub_name}")
+    print(f"🔐 Using Azure AD authentication (DefaultAzureCredential)")
+    
+    # Azure AD 인증 사용 (Managed Identity, Azure CLI, Environment variables 등)
+    credential = DefaultAzureCredential()
+    
+    # Producer 생성 - Connection String 대신 FQDN + Credential 사용
+    producer_client = EventHubProducerClient(
+        fully_qualified_namespace=eventhub_namespace,
+        eventhub_name=eventhub_name,
+        credential=credential
     )
     
     event_producer = EventProducer(producer_client)
@@ -218,6 +233,6 @@ if __name__ == "__main__":
     
     print(f"Sending {len(events)} events to Event Hub...")
     sent_count = event_producer.send_events_sync(events)
-    print(f"Successfully sent {sent_count} events")
+    print(f"✅ Successfully sent {sent_count} events")
     
     event_producer.close()

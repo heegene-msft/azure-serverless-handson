@@ -83,7 +83,7 @@ module "storage" {
   resource_group_name = module.resource_group.name
   tags                = local.common_tags
 
-  containers = ["products", "results", "samples", "deployments"]
+  containers = ["deployments"]  # Function code deployment only
 }
 
 # ============================================================
@@ -100,11 +100,11 @@ module "eventhub" {
   tags                = local.common_tags
 
   eventhubs = {
-    product_events = {
+    device_events = {
       partition_count   = 2
       message_retention = 1
     }
-    order_events = {
+    telemetry_events = {
       partition_count   = 2
       message_retention = 1
     }
@@ -130,13 +130,17 @@ module "cosmosdb" {
     serverless_db = {
       throughput = 400
       containers = {
-        products = {
-          partition_key_path = "/pk"
+        devices = {
+          partition_key_path = "/deviceId"
           throughput         = null # Use database throughput
         }
         events = {
-          partition_key_path = "/eventType"
+          partition_key_path = "/deviceId"
           throughput         = null
+        }
+        leases = {
+          partition_key_path = "/id"
+          throughput         = null # For Cosmos DB Change Feed leases
         }
       }
     }
@@ -176,7 +180,7 @@ module "function_app" {
     # Event Hub Settings - Azure AD Authentication (Managed Identity)
     "EventHubConnection__fullyQualifiedNamespace" = "${module.eventhub.namespace_name}.servicebus.windows.net"
     "EventHubConnection__credential"              = "managedidentity"
-    EVENTHUB_NAME                                 = "order_events"
+    EVENTHUB_NAME                                 = "telemetry_events"
 
     # Cosmos DB Settings - Azure AD Authentication (Managed Identity)
     "CosmosDBConnection__accountEndpoint" = module.cosmosdb.endpoint

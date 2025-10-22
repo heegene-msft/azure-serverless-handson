@@ -13,14 +13,51 @@ dist/
 .pytest_cache/
 .coverage
 htmlcov/
+.vscode/*
 
-# Terraform
-terraform/.terraform/
+
+# Terraform / OpenTofu
+# Local state and provider caches
+**/.terraform/
+**/.tofu/
+.terraform/
+.tofu/
+
+# State files (NEVER commit these - contain sensitive data)
 *.tfstate
 *.tfstate.*
+*.tfstate.backup
+terraform.tfstate.d/
+
+# Variable files (may contain secrets)
 *.tfvars
+*.tfvars.json
+!terraform.tfvars.example
+
+# Lock files (optional - some teams commit these)
 .terraform.lock.hcl
+.tofu.lock.hcl
+
+# Crash logs
 crash.log
+crash.*.log
+
+# Override files
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+.terraformrc
+terraform.rc
+
+# Plan files (may contain sensitive data)
+*.tfplan
+tfplan
+*.plan
+
+# CLI config files
+.terraformrc
+terraform.rc
 
 # Azure Functions
 src/functions/.python_packages/
@@ -36,7 +73,7 @@ src/functions/.funcignore
 local.settings.json
 
 # IDE
-.vscode/
+
 .idea/
 *.swp
 *.swo

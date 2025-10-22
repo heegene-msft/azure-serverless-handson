@@ -113,16 +113,16 @@ cd terraform
 az login
 
 # Terraform 초기화
-terraform init
+tofu init
 
 # 배포 계획 확인
-terraform plan
+tofu plan
 
 # 인프라 배포
-terraform apply
+tofu apply
 
 # 출력 값 확인 (연결 문자열 등)
-terraform output
+tofu output
 ```
 
 자세한 내용은 [terraform/README.md](terraform/README.md) 참조
@@ -242,7 +242,7 @@ event_producer.send_single_event(event)
 2. 방화벽 규칙 확인 (Azure Portal)
 3. RBAC 권한 확인 (Data Contributor)
 
-### Terraform 배포 실패
+### Opentofu 배포 실패
 
 1. Azure 구독 활성화 확인
 2. 리소스 이름 중복 확인
@@ -262,9 +262,9 @@ event_producer.send_single_event(event)
 cd terraform
 
 # 모든 리소스 삭제
-terraform destroy
+tofu destroy
 
-# 확인 메시지에 'yes' 입력
+# 확인 메시지에 'yes' 입력. 확인과정을 원하지 않으신다면 뒤에 --auto-approve 를 붙여주세요~
 ```
 
 ## 라이선스

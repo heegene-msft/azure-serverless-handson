@@ -67,8 +67,6 @@ resource "azurerm_role_assignment" "storage_account" {
 
 # Assign Event Hub Data Receiver role to Function App Managed Identity
 resource "azurerm_role_assignment" "eventhub_receiver" {
-  count = var.eventhub_namespace_id != null ? 1 : 0
-
   scope                = var.eventhub_namespace_id
   role_definition_name = "Azure Event Hubs Data Receiver"
   principal_id         = azurerm_linux_function_app.this.identity[0].principal_id
@@ -76,8 +74,6 @@ resource "azurerm_role_assignment" "eventhub_receiver" {
 
 # Assign Event Hub Data Sender role to Function App Managed Identity (for output bindings)
 resource "azurerm_role_assignment" "eventhub_sender" {
-  count = var.eventhub_namespace_id != null ? 1 : 0
-
   scope                = var.eventhub_namespace_id
   role_definition_name = "Azure Event Hubs Data Sender"
   principal_id         = azurerm_linux_function_app.this.identity[0].principal_id
@@ -86,8 +82,6 @@ resource "azurerm_role_assignment" "eventhub_sender" {
 # Assign Cosmos DB Built-in Data Contributor role to Function App Managed Identity
 # Cosmos DB uses its own RBAC system, not Azure RBAC
 resource "azurerm_cosmosdb_sql_role_assignment" "function_app_data_contributor" {
-  count = var.cosmosdb_account_id != null ? 1 : 0
-
   resource_group_name = var.resource_group_name
   account_name        = var.cosmosdb_account_name
   # Built-in Data Contributor role definition ID

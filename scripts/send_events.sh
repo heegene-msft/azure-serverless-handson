@@ -3,7 +3,7 @@
 
 set -e
 
-echo "🚀 Sending test events to Event Hub..."
+echo "Sending test events to Event Hub..."
 
 # 가상환경 활성화 (존재하는 경우)
 if [ -d "venv" ]; then
@@ -14,11 +14,11 @@ fi
 if [ -f ".env" ]; then
     export $(cat .env | grep -v '^#' | xargs)
 else
-    echo "⚠️  .env file not found. Please create one from .env.template"
+    echo ".env file not found. Please create one from .env.template"
     exit 1
 fi
 
 # Event Producer 실행
-python -m src.producer.event_producer
+python3 -m src.producer.event_producer
 
-echo "✅ Events sent successfully!"
+echo "Events sent - Success!"

@@ -26,19 +26,16 @@ variable "storage_account_id" {
 variable "eventhub_namespace_id" {
   description = "ID of the Event Hub namespace for role assignments"
   type        = string
-  default     = null
 }
 
 variable "cosmosdb_account_id" {
   description = "ID of the Cosmos DB account for role assignments"
   type        = string
-  default     = null
 }
 
 variable "cosmosdb_account_name" {
   description = "Name of the Cosmos DB account for role assignments"
   type        = string
-  default     = null
 }
 
 variable "app_insights_key" {
