@@ -15,7 +15,7 @@ pip install -r requirements.txt
 cp .env.template .env
 ```
 
-## 2️⃣ Terraform 인프라 배포 (15분)
+## 2️⃣ OpenTofu 인프라 배포 (15분)
 
 ```bash
 cd terraform
@@ -23,32 +23,30 @@ cd terraform
 # Azure 로그인
 az login
 
-# Terraform 초기화 및 배포
-terraform init
-terraform plan
-terraform apply
+# OpenTofu 초기화 및 배포
+tofu init
+tofu plan
+tofu apply
 
 # 출력 값 확인
-terraform output -json > outputs.json
+tofu output -json > outputs.json
 ```
 
-## 3️⃣ 환경변수 설정 (5분)
+## 3️⃣ 환경변수 설정 (1분)
 
-Terraform 출력 값을 `.env` 파일에 복사:
+Event Producer 실행을 위한 `.env` 파일 생성:
 
 ```bash
-# Event Hub
-terraform output eventhub_connection_string
-# → .env의 EVENTHUB_CONNECTION_STRING에 복사
+cd ..  # 프로젝트 루트로
 
-# Cosmos DB
-terraform output cosmos_connection_string
-# → .env의 COSMOS_CONNECTION_STRING에 복사
-
-# API Management
-terraform output apim_gateway_url
-# → .env의 APIM_GATEWAY_URL에 복사
+# .env 파일 생성 (Event Hub 정보만 필요)
+cat > .env << EOF
+EVENTHUB_NAMESPACE=serverless-handson-dev-eh.servicebus.windows.net
+EVENTHUB_NAME=telemetry_events
+EOF
 ```
+
+> 💡 **참고**: Connection String은 필요 없습니다! Azure AD 인증을 사용합니다.
 
 ## 4️⃣ 테스트 실행 (5분)
 
@@ -62,19 +60,7 @@ chmod +x scripts/*.sh
 ./scripts/send_events.sh
 ```
 
-### E2E 통합 테스트
 
-```bash
-# 전체 플로우 테스트 (Event → EventHub → Function → CosmosDB)
-./scripts/run_e2e_tests.sh
-```
-
-### 유닛 테스트
-
-```bash
-# 개별 컴포넌트 테스트
-./scripts/run_unit_tests.sh
-```
 
 ## 5️⃣ Azure Functions 로컬 실행 (선택사항)
 
@@ -104,42 +90,43 @@ curl -X POST http://localhost:7071/api/process-event \
 
 ### 로컬에서 Cosmos DB 쿼리
 
-```python
-from azure.cosmos import CosmosClient
-import os
+Azure Portal의 Data Explorer를 사용하거나, Azure CLI로 확인:
 
-client = CosmosClient.from_connection_string(os.getenv("COSMOS_CONNECTION_STRING"))
-database = client.get_database_client("serverless-db")
-container = database.get_container_client("events")
+```bash
+# Cosmos DB 문서 개수 확인
+az cosmosdb sql container show \
+  --account-name serverless-handson-dev-cosmos \
+  --resource-group serverless-handson-dev-rg \
+  --database-name serverless_db \
+  --name events \
+  --query "resource.statistics"
+```
 
-# 최근 10개 이벤트 조회
-for item in container.query_items(
-    query="SELECT TOP 10 * FROM c ORDER BY c.timestamp DESC",
-    enable_cross_partition_query=True
-):
-    print(item)
+또는 Azure Portal → Cosmos DB → Data Explorer에서 쿼리:
+```sql
+SELECT TOP 10 * FROM c ORDER BY c.timestamp DESC
 ```
 
 ## 7️⃣ 리소스 정리
 
 ```bash
 cd terraform
-terraform destroy
+tofu destroy
 # 'yes' 입력하여 확인
 ```
 
 ## 📋 체크리스트
 
 - [ ] Azure CLI 설치 및 로그인
-- [ ] Terraform 설치
+- [ ] OpenTofu 설치
 - [ ] Python 3.11 설치
 - [ ] 가상환경 생성 및 활성화
 - [ ] requirements.txt 설치
-- [ ] Terraform 배포 완료
+- [ ] OpenTofu 배포 완료
 - [ ] .env 파일 설정
 - [ ] 이벤트 전송 테스트 성공
-- [ ] E2E 테스트 성공
 - [ ] Azure Portal에서 리소스 확인
+- [ ] Function App 로그에서 처리 확인
 
 ## 🆘 문제 해결
 
@@ -154,15 +141,15 @@ which python
 pip install -r requirements.txt
 ```
 
-### Terraform 배포 실패
+### OpenTofu 배포 실패
 
 ```bash
 # Provider 캐시 정리
 rm -rf terraform/.terraform
-terraform init
+tofu init
 
 # 특정 리소스만 재배포
-terraform apply -target=module.eventhub
+tofu apply -target=module.eventhub
 ```
 
 ### Function이 이벤트를 받지 못함

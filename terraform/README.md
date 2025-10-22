@@ -1,204 +1,153 @@
 # ================================================================
 # Azure Serverless Handson - Infrastructure as Code
 # ================================================================
-# This configuration creates a complete serverless architecture
-# for event-driven data processing on Azure.
+# Azure에서 이벤트 기반 데이터 처리를 위한 서버리스 아키텍처를 생성합니다.
 # 
-# Compatible with both Terraform and OpenTofu
+# Terraform과 OpenTofu 모두 호환됩니다.
 
-## 📋 Architecture
+## 📋 아키텍처
 
 ```
-Event → Event Hub → APIM → Functions → Cosmos DB
+이벤트 → Event Hub → APIM → Functions → Cosmos DB
                                     ↓
                             App Insights
 ```
 
-## 🎯 Resources Created
+## 🎯 생성되는 리소스
 
-1. **Resource Group** - Container for all resources
-2. **Storage Account** - Blob storage for functions and data
-3. **Event Hub** - Event streaming platform
-4. **Cosmos DB** - NoSQL database with change feed
-5. **Function App** - Serverless compute (Python 3.11)
-6. **API Management** - API gateway with policies
-7. **Application Insights** - Monitoring and diagnostics
+1. **Resource Group** - 모든 리소스를 담는 컨테이너
+2. **Storage Account** - Function 및 데이터를 위한 Blob 스토리지
+3. **Event Hub** - 이벤트 스트리밍 플랫폼
+4. **Cosmos DB** - Change Feed 지원 NoSQL 데이터베이스
+5. **Function App** - 서버리스 컴퓨팅 (Python 3.11)
+6. **API Management** - 정책이 적용된 API 게이트웨이
+7. **Application Insights** - 모니터링 및 진단
 
-## 🚀 Getting Started
+## 🚀 시작하기
 
-### Prerequisites
+### 사전 요구사항
 
-- [Terraform](https://www.terraform.io/downloads.html) >= 1.0 **OR** [OpenTofu](https://opentofu.org/docs/intro/install/) >= 1.6
+- [OpenTofu](https://opentofu.org/docs/intro/install/) >= 1.6 (권장) **또는** [Terraform](https://www.terraform.io/downloads.html) >= 1.0
 - [Azure CLI](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli)
-- Azure subscription
+- Azure 구독
 
-### Installation Steps
+### 배포 단계
 
-#### Option 1: Using Terraform
-
-1. **Login to Azure**
+1. **Azure 로그인**
    ```bash
    az login
    az account set --subscription "<your-subscription-id>"
    ```
 
-2. **Initialize**
+2. **초기화**
    ```bash
    cd terraform
-   terraform init  # or: tofu init
+   tofu init  # Terraform 사용 시: terraform init
    ```
 
-3. **Review and Modify Variables**
-   Edit `terraform.tfvars` to customize your deployment:
+3. **Opentofu 변수 검토 및 수정**
+   `terraform.tfvars` 파일을 편집하여 배포 설정을 커스터마이즈:
    ```hcl
    project_name = "serverless-handson"       # 프로젝트명
-   location     = "koreacentral"             # 혹은 원하시는 리전
+   location     = "koreacentral"             # 원하시는 리전
    apim_publisher_email = "your-email@example.com"
    ```
 
-4. **Plan the Deployment**
+4. **배포 계획 확인**
    ```bash
-   terraform plan -out=tfplan  # or: tofu plan -out=tfplan
+   tofu plan -out=tfplan  # Terraform 사용 시: terraform plan -out=tfplan
    ```
 
-5. **Apply the Configuration**
+5. **설정 적용**
    ```bash
-   terraform apply tfplan      # or: tofu apply tfplan
+   tofu apply tfplan      # Terraform 사용 시: terraform apply tfplan
    ```
 
-## 📁 Project Structure
+## 📁 프로젝트 구조
 
 ```
 terraform/
-├── main.tf                  # Main orchestration
-├── variables.tf             # Variable definitions
-├── outputs.tf               # Output definitions
-├── backend.tf               # Remote state configuration (optional)
-├── terraform.tfvars         # Variable values
+├── main.tf                  # 메인 오케스트레이션
+├── variables.tf             # 변수 정의
+├── outputs.tf               # 출력 정의
+├── backend.tf               # 원격 상태 설정 (선택사항)
+├── terraform.tfvars         # 변수 값
 ├── modules/
-│   ├── resource_group/      # Resource group module
-│   ├── storage/             # Storage account module
-│   ├── eventhub/            # Event Hub module
-│   ├── cosmosdb/            # Cosmos DB module
-│   ├── function_app/        # Function App module
-│   ├── apim/                # API Management module
-│   └── insights/            # Application Insights module
+│   ├── resource_group/      # 리소스 그룹 모듈
+│   ├── storage/             # Storage 계정 모듈
+│   ├── eventhub/            # Event Hub 모듈
+│   ├── cosmosdb/            # Cosmos DB 모듈
+│   ├── function_app/        # Function App 모듈
+│   ├── apim/                # API Management 모듈
+│   └── insights/            # Application Insights 모듈
 └── env/
-    └── dev.tfvars           # Environment-specific variables
+    └── dev.tfvars           # 환경별 변수
 ```
 
-## 🔧 Configuration
+## 🔧 설정
 
-### Key Variables
+### 주요 변수
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `project_name` | Project name prefix | `serverless-handson` |
-| `environment` | Environment name | `dev` |
-| `location` | Azure region | `koreacentral` |
+| 변수 | 설명 | 기본값 |
+|------|------|--------|
+| `project_name` | 프로젝트 이름 접두사 | `serverless-handson` |
+| `environment` | 환경 이름 | `dev` |
+| `location` | Azure 리전 | `koreacentral` |
 | `eventhub_sku` | Event Hub SKU | `Standard` |
-| `cosmos_enable_free_tier` | Enable Cosmos free tier | `false` |
+| `cosmos_enable_free_tier` | Cosmos 무료 계층 활성화 | `false` |
 | `apim_sku` | APIM SKU | `Consumption` |
 
-### Outputs
+### 출력 값
 
-After deployment, the tool will output important information:
+배포 후 중요한 정보가 출력됩니다:
 
 ```bash
-terraform output  # or: tofu output
+tofu output  # Terraform 사용 시: terraform output
 ```
 
-Key outputs:
-- `resource_group_name` - Name of the created resource group
-- `eventhub_connection_string` - Event Hub connection string (sensitive)
-- `cosmosdb_connection_string` - Cosmos DB connection string (sensitive)
+주요 출력 값:
+- `resource_group_name` - 생성된 리소스 그룹 이름
+- `eventhub_namespace_fqdn` - Event Hub 네임스페이스 FQDN (.env 파일용)
+- `cosmosdb_endpoint` - Cosmos DB 엔드포인트 (Managed Identity 인증용)
 - `function_app_url` - Function App URL
-- `apim_gateway_url` - API Management gateway URL
+- `apim_gateway_url` - API Management 게이트웨이 URL
 
-To view sensitive outputs:
-```bash
-terraform output -json > outputs.json  # or: tofu output -json > outputs.json
-```
 
-## 🔐 Security Best Practices
+## 🔐 보안 모범 사례
 
-1. **Enable Remote State** (Recommended for teams)
-   - Uncomment backend configuration in `backend.tf`
-   - Create Azure Storage for state file
-   - Run `terraform init -migrate-state` or `tofu init -migrate-state`
+1. **원격 상태 활성화** (팀 작업 시 권장)
+   - `backend.tf`에서 백엔드 설정 주석 해제
+   - 상태 파일을 위한 Azure Storage 생성
+   - `tofu init -migrate-state` 실행 (Terraform 사용 시: `terraform init -migrate-state`)
+   - 로컬에서 관리하신다면, 상태 파일을 **몹시** 소중하게 다루어 주셔야 합니다. 
 
-2. **Protect Sensitive Data**
-   - Never commit `.tfstate` or `.tfstate.backup` files
-   - Use Azure Key Vault for secrets
-   - Enable RBAC on all resources
+2. **민감한 데이터 보호**
+   - `.tfstate` 또는 `.tfstate.backup` 파일 절대 커밋 금지
+   - 시크릿은 Azure Key Vault 사용하기
+   - 모든 리소스에 RBAC 활성화(Azure Storage Account의 경우, Data Plane 별도)
 
-3. **Network Security**
-   - Configure VNet integration for Function Apps
-   - Enable private endpoints for Cosmos DB
-   - Use Azure Firewall or NSGs
+3. **네트워크 보안**
+   - Function App에 VNet 통합 구성
+   - Cosmos DB에 프라이빗 엔드포인트 활성화
+   - Azure Firewall 또는 NSG 사용
 
-## 🧹 Cleanup
+## 🧹 리소스 정리
 
-To destroy all resources:
+모든 리소스 삭제:
 
 ```bash
-terraform destroy  # or: tofu destroy
+tofu destroy  # Terraform 사용 시: terraform destroy
 ```
 
-⚠️ **Warning**: This will permanently delete all resources.
 
+## 📖 참고 자료
 
-## 📚 Next Steps
+- [Azure Terraform Provider 문서](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs)
+- [OpenTofu 문서](https://opentofu.org/docs/)
+- [Azure Functions 문서](https://docs.microsoft.com/en-us/azure/azure-functions/)
+- [Event Hubs 문서](https://docs.microsoft.com/en-us/azure/event-hubs/)
+- [Cosmos DB 문서](https://docs.microsoft.com/en-us/azure/cosmos-db/)
 
-1. Deploy Azure Functions code (see `/src/functions`)
-2. Configure Event producers (see `/src/producer`)
-3. Run integration tests (see `/tests`)
-4. Set up monitoring dashboards in Application Insights
-
-## 🐛 Troubleshooting
-
-### Common Issues
-
-**Issue**: `terraform init` or `tofu init` fails
-- **Solution**: Check Azure CLI authentication with `az account show`
-
-**Issue**: Function App won't start
-- **Solution**: Check Application Insights connection in portal
-
-**Issue**: APIM deployment takes too long
-- **Solution**: Consumption tier APIM deploys in ~5 min, other tiers 30-45 min
-
-## 🔄 Migrating from Terraform to OpenTofu
-
-If you have existing Terraform state and want to migrate to OpenTofu:
-
-1. **Install OpenTofu** (see Prerequisites above)
-
-2. **Backup your state**
-   ```bash
-   cp terraform.tfstate terraform.tfstate.backup
-   ```
-
-3. **Initialize OpenTofu**
-   ```bash
-   tofu init
-   ```
-
-4. **Verify the migration**
-   ```bash
-   tofu plan
-   ```
-
-OpenTofu is a drop-in replacement for Terraform. Your existing `.tf` files and state will work without modification.
-
-## 📖 References
-
-- [Azure Terraform Provider Documentation](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs)
-- [OpenTofu Documentation](https://opentofu.org/docs/)
-- [Azure Functions Documentation](https://docs.microsoft.com/en-us/azure/azure-functions/)
-- [Event Hubs Documentation](https://docs.microsoft.com/en-us/azure/event-hubs/)
-- [Cosmos DB Documentation](https://docs.microsoft.com/en-us/azure/cosmos-db/)
-
-## 📝 License
+## 📝 라이선스
 
 MIT License

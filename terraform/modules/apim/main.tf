@@ -35,7 +35,7 @@ resource "azurerm_api_management_api_operation" "process_event" {
   resource_group_name = var.resource_group_name
   display_name        = "Process Event"
   method              = "POST"
-  url_template        = "/api/process-event"
+  url_template        = "/process-event"
   description         = "Process event and store in Cosmos DB"
 
   request {
@@ -60,7 +60,7 @@ resource "azurerm_api_management_api_operation" "health_check" {
   resource_group_name = var.resource_group_name
   display_name        = "Health Check"
   method              = "GET"
-  url_template        = "/api/health"
+  url_template        = "/health"
   description         = "Function App health check endpoint"
 
   response {

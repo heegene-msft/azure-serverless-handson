@@ -1,10 +1,9 @@
 """
 Event Hub Producer - 이벤트 생성 및 전송
-AWS Kinesis → Azure Event Hub 마이그레이션 패턴
+Azure Event Hub를 사용한 IoT 텔레메트리 데이터 전송
 """
 import json
 import uuid
-import asyncio
 from datetime import datetime
 from typing import List, Dict, Any
 from azure.eventhub import EventData, EventHubProducerClient
@@ -53,7 +52,7 @@ class EventProducer:
         }
     
     def send_events_sync(self, events: List[Dict[str, Any]], partition_key: str = None) -> int:
-        """동기적으로 이벤트 배치 전송 (Connection String 방식)
+        """동기적으로 이벤트 배치 전송
         
         Args:
             events: 전송할 이벤트 리스트
@@ -78,7 +77,7 @@ class EventProducer:
                 event_json = json.dumps(event)
                 event_data = EventData(event_json)
                 
-                # 커스텀 속성 추가 (APIM에서 활용 가능)
+                # 커스텀 속성 추가
                 event_data.properties = {
                     "eventType": event.get("eventType", "unknown"),
                     "deviceId": event.get("deviceId", "unknown")
@@ -130,67 +129,6 @@ class EventProducer:
         logger.info("EventHub Producer connection closed")
 
 
-class AsyncEventProducer:
-    """비동기 Event Hub Producer (높은 처리량 요구시 사용)"""
-    
-    def __init__(self, eventhub_namespace: str, eventhub_name: str, credential):
-        """
-        Args:
-            eventhub_namespace: Event Hub 네임스페이스 FQDN
-            eventhub_name: Event Hub 이름
-            credential: Azure 인증 정보 (DefaultAzureCredential 등)
-        """
-        from azure.eventhub.aio import EventHubProducerClient
-        
-        self.producer = EventHubProducerClient(
-            fully_qualified_namespace=eventhub_namespace,
-            eventhub_name=eventhub_name,
-            credential=credential
-        )
-    
-    async def send_events_async(self, events: List[Dict[str, Any]], partition_key: str = None) -> int:
-        """비동기적으로 이벤트 배치 전송
-        
-        Args:
-            events: 전송할 이벤트 리스트
-            partition_key: 파티션 키
-        
-        Returns:
-            전송된 이벤트 수
-        """
-        if not events:
-            return 0
-        
-        async with self.producer:
-            event_data_batch = await self.producer.create_batch(
-                partition_key=partition_key if partition_key else None
-            )
-            
-            sent_count = 0
-            for event in events:
-                event_json = json.dumps(event)
-                event_data = EventData(event_json)
-                event_data.properties = {
-                    "eventType": event.get("eventType", "unknown"),
-                    "deviceId": event.get("deviceId", "unknown")
-                }
-                
-                try:
-                    event_data_batch.add(event_data)
-                    sent_count += 1
-                except ValueError:
-                    await self.producer.send_batch(event_data_batch)
-                    event_data_batch = await self.producer.create_batch(partition_key=partition_key)
-                    event_data_batch.add(event_data)
-                    sent_count = 1
-            
-            if sent_count > 0:
-                await self.producer.send_batch(event_data_batch)
-                logger.info(f"Async sent {sent_count} events")
-            
-            return sent_count
-
-
 # CLI 실행 예제 - Azure AD 인증 사용
 if __name__ == "__main__":
     import os
@@ -211,9 +149,9 @@ if __name__ == "__main__":
         print("Example: EVENTHUB_NAMESPACE=your-namespace.servicebus.windows.net")
         exit(1)
     
-    print(f"✅ Event Hub Namespace: {eventhub_namespace}")
-    print(f"✅ Event Hub Name: {eventhub_name}")
-    print(f"🔐 Using Azure AD authentication (DefaultAzureCredential)")
+    print(f"Event Hub Namespace: {eventhub_namespace}")
+    print(f"Event Hub Name: {eventhub_name}")
+
     
     # Azure AD 인증 사용 (Managed Identity, Azure CLI, Environment variables 등)
     credential = DefaultAzureCredential()

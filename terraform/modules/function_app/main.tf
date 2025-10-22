@@ -39,11 +39,12 @@ resource "azurerm_linux_function_app" "this" {
 
   app_settings = merge(
     {
-      "FUNCTIONS_WORKER_RUNTIME"       = var.runtime_stack
-      "FUNCTIONS_EXTENSION_VERSION"    = var.runtime_version
+      "FUNCTIONS_WORKER_RUNTIME"         = var.runtime_stack
+      "FUNCTIONS_EXTENSION_VERSION"      = var.runtime_version
       "AzureWebJobsStorage__accountName" = var.storage_account_name
-      "SCM_DO_BUILD_DURING_DEPLOYMENT" = "true"
-      "ENABLE_ORYX_BUILD"              = "true"
+      "SCM_DO_BUILD_DURING_DEPLOYMENT"   = "true"
+      "ENABLE_ORYX_BUILD"                = "true"
+      "WEBSITE_RUN_FROM_PACKAGE"         = "1"  # Placeholder, will be updated by null_resource
     },
     var.app_settings
   )
