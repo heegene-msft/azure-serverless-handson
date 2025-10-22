@@ -1,8 +1,10 @@
 # ================================================================
-# Azure Serverless Handson - Terraform Infrastructure
+# Azure Serverless Handson - Infrastructure as Code
 # ================================================================
-# This Terraform configuration creates a complete serverless architecture
+# This configuration creates a complete serverless architecture
 # for event-driven data processing on Azure.
+# 
+# Compatible with both Terraform and OpenTofu
 
 ## 📋 Architecture
 
@@ -26,11 +28,13 @@ Event → Event Hub → APIM → Functions → Cosmos DB
 
 ### Prerequisites
 
-- [Terraform](https://www.terraform.io/downloads.html) >= 1.0
+- [Terraform](https://www.terraform.io/downloads.html) >= 1.0 **OR** [OpenTofu](https://opentofu.org/docs/intro/install/) >= 1.6
 - [Azure CLI](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli)
 - Azure subscription
 
 ### Installation Steps
+
+#### Option 1: Using Terraform
 
 1. **Login to Azure**
    ```bash
@@ -38,28 +42,28 @@ Event → Event Hub → APIM → Functions → Cosmos DB
    az account set --subscription "<your-subscription-id>"
    ```
 
-2. **Initialize Terraform**
+2. **Initialize**
    ```bash
    cd terraform
-   terraform init
+   terraform init  # or: tofu init
    ```
 
 3. **Review and Modify Variables**
    Edit `terraform.tfvars` to customize your deployment:
    ```hcl
-   project_name = "your-project-name"
-   location     = "koreacentral"  # or your preferred region
+   project_name = "serverless-handson"       # 프로젝트명
+   location     = "koreacentral"             # 혹은 원하시는 리전
    apim_publisher_email = "your-email@example.com"
    ```
 
 4. **Plan the Deployment**
    ```bash
-   terraform plan -out=tfplan
+   terraform plan -out=tfplan  # or: tofu plan -out=tfplan
    ```
 
 5. **Apply the Configuration**
    ```bash
-   terraform apply tfplan
+   terraform apply tfplan      # or: tofu apply tfplan
    ```
 
 ## 📁 Project Structure
@@ -98,10 +102,10 @@ terraform/
 
 ### Outputs
 
-After deployment, Terraform will output important information:
+After deployment, the tool will output important information:
 
 ```bash
-terraform output
+terraform output  # or: tofu output
 ```
 
 Key outputs:
@@ -113,7 +117,7 @@ Key outputs:
 
 To view sensitive outputs:
 ```bash
-terraform output -json > outputs.json
+terraform output -json > outputs.json  # or: tofu output -json > outputs.json
 ```
 
 ## 🔐 Security Best Practices
@@ -121,10 +125,10 @@ terraform output -json > outputs.json
 1. **Enable Remote State** (Recommended for teams)
    - Uncomment backend configuration in `backend.tf`
    - Create Azure Storage for state file
-   - Run `terraform init -migrate-state`
+   - Run `terraform init -migrate-state` or `tofu init -migrate-state`
 
 2. **Protect Sensitive Data**
-   - Never commit `.tfstate` files
+   - Never commit `.tfstate` or `.tfstate.backup` files
    - Use Azure Key Vault for secrets
    - Enable RBAC on all resources
 
@@ -138,44 +142,11 @@ terraform output -json > outputs.json
 To destroy all resources:
 
 ```bash
-terraform destroy
+terraform destroy  # or: tofu destroy
 ```
 
-⚠️ **Warning**: This will permanently delete all resources created by Terraform.
+⚠️ **Warning**: This will permanently delete all resources.
 
-## 📊 Cost Estimation
-
-Approximate monthly costs (pay-as-you-go):
-- Event Hub (Standard): ~$10
-- Cosmos DB (400 RU/s): ~$24
-- Function App (Consumption): Pay per execution
-- API Management (Consumption): Pay per call
-- Storage Account: ~$1
-- Application Insights: ~$2.88
-
-**Total**: ~$40-50/month (excluding function executions and API calls)
-
-## 🔄 CI/CD Integration
-
-### GitHub Actions Example
-
-```yaml
-name: Terraform Deploy
-
-on:
-  push:
-    branches: [main]
-
-jobs:
-  terraform:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - uses: hashicorp/setup-terraform@v1
-      - run: terraform init
-      - run: terraform plan
-      - run: terraform apply -auto-approve
-```
 
 ## 📚 Next Steps
 
@@ -188,7 +159,7 @@ jobs:
 
 ### Common Issues
 
-**Issue**: `terraform init` fails
+**Issue**: `terraform init` or `tofu init` fails
 - **Solution**: Check Azure CLI authentication with `az account show`
 
 **Issue**: Function App won't start
@@ -197,9 +168,33 @@ jobs:
 **Issue**: APIM deployment takes too long
 - **Solution**: Consumption tier APIM deploys in ~5 min, other tiers 30-45 min
 
+## 🔄 Migrating from Terraform to OpenTofu
+
+If you have existing Terraform state and want to migrate to OpenTofu:
+
+1. **Install OpenTofu** (see Prerequisites above)
+
+2. **Backup your state**
+   ```bash
+   cp terraform.tfstate terraform.tfstate.backup
+   ```
+
+3. **Initialize OpenTofu**
+   ```bash
+   tofu init
+   ```
+
+4. **Verify the migration**
+   ```bash
+   tofu plan
+   ```
+
+OpenTofu is a drop-in replacement for Terraform. Your existing `.tf` files and state will work without modification.
+
 ## 📖 References
 
 - [Azure Terraform Provider Documentation](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs)
+- [OpenTofu Documentation](https://opentofu.org/docs/)
 - [Azure Functions Documentation](https://docs.microsoft.com/en-us/azure/azure-functions/)
 - [Event Hubs Documentation](https://docs.microsoft.com/en-us/azure/event-hubs/)
 - [Cosmos DB Documentation](https://docs.microsoft.com/en-us/azure/cosmos-db/)

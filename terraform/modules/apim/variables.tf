@@ -24,9 +24,14 @@ variable "publisher_email" {
 }
 
 variable "sku_name" {
-  description = "SKU name (Consumption, Developer, Basic, Standard, Premium)"
+  description = "SKU name in format {tier}_{capacity} (e.g., Consumption_0, Developer_1, Basic_1, Standard_1, Premium_1)"
   type        = string
-  default     = "Consumption"
+  default     = "Consumption_0"
+
+  validation {
+    condition     = can(regex("^(Consumption_0|Developer_[1-9]|Basic_[1-4]|Standard_[1-4]|Premium_[1-9][0-9]*)$", var.sku_name))
+    error_message = "SKU must be in format {tier}_{capacity}. Examples: Consumption_0, Developer_1, Basic_1, Standard_1, Premium_1"
+  }
 }
 
 variable "function_app_url" {

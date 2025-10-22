@@ -29,3 +29,13 @@ output "container_names" {
   description = "Names of created containers"
   value       = [for c in azurerm_storage_container.containers : c.name]
 }
+
+output "deployment_container_id" {
+  description = "ID of the deployments container"
+  value       = azurerm_storage_container.containers["deployments"].id
+}
+
+output "current_user_role_assignment_id" {
+  description = "ID of the role assignment for current user"
+  value       = azurerm_role_assignment.current_user_blob_contributor.id
+}

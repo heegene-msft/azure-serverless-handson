@@ -2,6 +2,12 @@
 # Common Variables
 # ============================================================
 
+variable "subscription_id" {
+  description = "Azure subscription ID (leave empty to use az account show)"
+  type        = string
+  default     = ""
+}
+
 variable "project_name" {
   description = "Project name used for resource naming"
   type        = string
@@ -57,9 +63,9 @@ variable "cosmos_enable_free_tier" {
 # ============================================================
 
 variable "apim_sku" {
-  description = "SKU for API Management (Consumption, Developer, Basic, Standard, Premium)"
+  description = "SKU for API Management in format {tier}_{capacity} (Consumption_0, Developer_1, Basic_1, Standard_1, Premium_1)"
   type        = string
-  default     = "Consumption"
+  default     = "Consumption_0"
 }
 
 variable "apim_publisher_name" {

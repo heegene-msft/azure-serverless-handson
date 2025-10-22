@@ -27,16 +27,48 @@ resource "azurerm_api_management_api" "function_api" {
   service_url = "https://${var.function_app_url}"
 }
 
-# Create a basic operation (example)
-resource "azurerm_api_management_api_operation" "example_get" {
-  operation_id        = "get-example"
+# HTTP Trigger - Process Event (POST)
+resource "azurerm_api_management_api_operation" "process_event" {
+  operation_id        = "process-event"
   api_name            = azurerm_api_management_api.function_api.name
   api_management_name = azurerm_api_management.this.name
   resource_group_name = var.resource_group_name
-  display_name        = "GET Example"
+  display_name        = "Process Event"
+  method              = "POST"
+  url_template        = "/api/process-event"
+  description         = "Process event and store in Cosmos DB"
+
+  request {
+    representation {
+      content_type = "application/json"
+    }
+  }
+
+  response {
+    status_code = 200
+    representation {
+      content_type = "application/json"
+    }
+  }
+}
+
+# HTTP Trigger - Health Check (GET)
+resource "azurerm_api_management_api_operation" "health_check" {
+  operation_id        = "health-check"
+  api_name            = azurerm_api_management_api.function_api.name
+  api_management_name = azurerm_api_management.this.name
+  resource_group_name = var.resource_group_name
+  display_name        = "Health Check"
   method              = "GET"
-  url_template        = "/*"
-  description         = "Example GET operation to Function App"
+  url_template        = "/api/health"
+  description         = "Function App health check endpoint"
+
+  response {
+    status_code = 200
+    representation {
+      content_type = "application/json"
+    }
+  }
 }
 
 # Add policy to include function key

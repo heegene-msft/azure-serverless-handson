@@ -9,8 +9,8 @@ resource "azurerm_cosmosdb_account" "this" {
   offer_type          = var.offer_type
   kind                = "GlobalDocumentDB"
 
-  enable_free_tier          = var.enable_free_tier
-  enable_automatic_failover = false
+  free_tier_enabled          = var.enable_free_tier
+  automatic_failover_enabled = false
 
   consistency_policy {
     consistency_level       = var.consistency_level
@@ -51,7 +51,7 @@ resource "azurerm_cosmosdb_sql_container" "containers" {
   resource_group_name = var.resource_group_name
   account_name        = azurerm_cosmosdb_account.this.name
   database_name       = azurerm_cosmosdb_sql_database.databases[each.value.database_name].name
-  partition_key_path  = each.value.partition_key_path
+  partition_key_paths = [each.value.partition_key_path]
   throughput          = each.value.throughput
 
   indexing_policy {

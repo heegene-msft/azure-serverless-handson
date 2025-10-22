@@ -49,3 +49,9 @@ variable "tags" {
   type        = map(string)
   default     = {}
 }
+
+variable "grant_data_sender_to_current_user" {
+  description = "Grant Azure Event Hubs Data Sender role to current user"
+  type        = bool
+  default     = true
+}

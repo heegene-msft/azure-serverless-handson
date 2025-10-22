@@ -18,10 +18,27 @@ variable "storage_account_name" {
   type        = string
 }
 
-variable "storage_account_access_key" {
-  description = "Access key for the storage account"
+variable "storage_account_id" {
+  description = "ID of the storage account for role assignments"
   type        = string
-  sensitive   = true
+}
+
+variable "eventhub_namespace_id" {
+  description = "ID of the Event Hub namespace for role assignments"
+  type        = string
+  default     = null
+}
+
+variable "cosmosdb_account_id" {
+  description = "ID of the Cosmos DB account for role assignments"
+  type        = string
+  default     = null
+}
+
+variable "cosmosdb_account_name" {
+  description = "Name of the Cosmos DB account for role assignments"
+  type        = string
+  default     = null
 }
 
 variable "app_insights_key" {
@@ -64,4 +81,19 @@ variable "tags" {
   description = "Tags to apply"
   type        = map(string)
   default     = {}
+}
+
+variable "function_code_path" {
+  description = "Path to the function code directory"
+  type        = string
+}
+
+variable "deployment_container_id" {
+  description = "ID of the deployments container in storage account"
+  type        = string
+}
+
+variable "storage_role_assignment_id" {
+  description = "ID of the storage role assignment for current user"
+  type        = string
 }

@@ -1,16 +1,17 @@
 # ============================================================
-# Azure Serverless Handson - Main Terraform Configuration
+# Azure Serverless Handson - Infrastructure as Code
 # ============================================================
 # This orchestrates all modules for the serverless architecture
 # Event Hub -> APIM -> Functions -> Cosmos DB -> App Insights
+# Compatible with both Terraform and OpenTofu
 
 terraform {
-  required_version = ">=1.0"
+  required_version = ">= 1.0"  # OpenTofu 1.6+ also compatible
 
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~> 4.0"
+      version = ">= 4.0, < 5.0"  # 4.x 최신 버전 사용
     }
     random = {
       source  = "hashicorp/random"
@@ -20,6 +21,12 @@ terraform {
 }
 
 provider "azurerm" {
+  subscription_id = var.subscription_id != "" ? var.subscription_id : null
+  
+  # Use Azure AD authentication for Storage Data Plane operations
+  # This allows managing storage containers without shared key access
+  storage_use_azuread = true
+  
   features {
     resource_group {
       prevent_deletion_if_contains_resources = false
@@ -76,7 +83,7 @@ module "storage" {
   resource_group_name = module.resource_group.name
   tags                = local.common_tags
 
-  containers = ["products", "results", "samples"]
+  containers = ["products", "results", "samples", "deployments"]
 }
 
 # ============================================================
@@ -147,28 +154,38 @@ module "function_app" {
   resource_group_name = module.resource_group.name
   tags                = local.common_tags
 
-  storage_account_name       = module.storage.name
-  storage_account_access_key = module.storage.primary_access_key
-  app_insights_key           = module.insights.instrumentation_key
-  app_insights_connection_string = module.insights.connection_string
+  storage_account_name        = module.storage.name
+  storage_account_id          = module.storage.id
+  deployment_container_id     = module.storage.deployment_container_id
+  storage_role_assignment_id  = module.storage.current_user_role_assignment_id
+  eventhub_namespace_id       = module.eventhub.namespace_id
+  cosmosdb_account_id               = module.cosmosdb.account_id
+  cosmosdb_account_name             = module.cosmosdb.account_name
+  app_insights_key                  = module.insights.instrumentation_key
+  app_insights_connection_string    = module.insights.connection_string
+
+  # Function code path
+  function_code_path     = "${path.root}/../src/functions"
 
   # Function-specific settings
-  runtime_version = "~4"
-  runtime_stack   = "python"
+  runtime_version        = "~4"
+  runtime_stack          = "python"
   runtime_version_detail = "3.11"
 
   app_settings = {
-    # Event Hub Settings
-    EVENTHUB_CONNECTION_STRING = module.eventhub.primary_connection_string
-    EVENTHUB_NAME             = "product_events"
+    # Event Hub Settings - Azure AD Authentication (Managed Identity)
+    "EventHubConnection__fullyQualifiedNamespace" = "${module.eventhub.namespace_name}.servicebus.windows.net"
+    "EventHubConnection__credential"              = "managedidentity"
+    EVENTHUB_NAME                                 = "order_events"
 
-    # Cosmos DB Settings
-    COSMOS_DB_CONNECTION_STRING = module.cosmosdb.primary_connection_string
-    COSMOS_DB_DATABASE_NAME     = "serverless_db"
-    COSMOS_DB_CONTAINER_NAME    = "products"
+    # Cosmos DB Settings - Azure AD Authentication (Managed Identity)
+    "CosmosDBConnection__accountEndpoint" = module.cosmosdb.endpoint
+    "CosmosDBConnection__credential"      = "managedidentity"
+    COSMOS_DB_DATABASE_NAME               = "serverless_db"
+    COSMOS_DB_CONTAINER_NAME              = "events"
 
-    # Storage Settings
-    STORAGE_CONNECTION_STRING = module.storage.primary_connection_string
+    # Storage Settings (이미 Managed Identity 사용 중)
+    # AzureWebJobsStorage는 function_app 모듈에서 자동 설정됨
   }
 }
 
