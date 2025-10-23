@@ -97,4 +97,23 @@ resource "azurerm_api_management_api_policy" "function_policy" {
   </on-error>
 </policies>
 XML
+
+  depends_on = [
+    azurerm_api_management_api.function_api,
+    azurerm_api_management_api_operation.health_check,
+    azurerm_api_management_api_operation.process_event
+  ]
+}
+
+# Ensure proper deletion order: child resources before parent API
+resource "null_resource" "api_deletion_order" {
+  triggers = {
+    api_id = azurerm_api_management_api.function_api.id
+  }
+
+  depends_on = [
+    azurerm_api_management_api_policy.function_policy,
+    azurerm_api_management_api_operation.health_check,
+    azurerm_api_management_api_operation.process_event
+  ]
 }

@@ -3,7 +3,7 @@
 # ================================================================
 # Azure에서 이벤트 기반 데이터 처리를 위한 서버리스 아키텍처를 생성합니다.
 # 
-# Terraform과 OpenTofu 모두 호환됩니다.
+# Opentofu/Terraform compatiable 
 
 ## 📋 아키텍처
 
@@ -94,12 +94,12 @@ terraform/
 | `environment` | 환경 이름 | `dev` |
 | `location` | Azure 리전 | `koreacentral` |
 | `eventhub_sku` | Event Hub SKU | `Standard` |
-| `cosmos_enable_free_tier` | Cosmos 무료 계층 활성화 | `false` |
+| `cosmos_enable_free_tier` | Cosmos 무료 계층 활성화(구독당 하나만 가능) | `false` |
 | `apim_sku` | APIM SKU | `Consumption` |
 
 ### 출력 값
 
-배포 후 중요한 정보가 출력됩니다:
+배포 후 아웃풋이 출력됩니다:
 
 ```bash
 tofu output  # Terraform 사용 시: terraform output
@@ -113,15 +113,15 @@ tofu output  # Terraform 사용 시: terraform output
 - `apim_gateway_url` - API Management 게이트웨이 URL
 
 
-## 🔐 보안 모범 사례
+## 🔐 보안 베스트 프랙티스
 
-1. **원격 상태 활성화** (팀 작업 시 권장)
+1. **Remote State 활성화** (팀 작업 시 권장)
    - `backend.tf`에서 백엔드 설정 주석 해제
    - 상태 파일을 위한 Azure Storage 생성
    - `tofu init -migrate-state` 실행 (Terraform 사용 시: `terraform init -migrate-state`)
    - 로컬에서 관리하신다면, 상태 파일을 **몹시** 소중하게 다루어 주셔야 합니다. 
 
-2. **민감한 데이터 보호**
+2. **시크릿 보호**
    - `.tfstate` 또는 `.tfstate.backup` 파일 절대 커밋 금지
    - 시크릿은 Azure Key Vault 사용하기
    - 모든 리소스에 RBAC 활성화(Azure Storage Account의 경우, Data Plane 별도)
@@ -141,7 +141,6 @@ tofu destroy  # Terraform 사용 시: terraform destroy
 
 
 ## 📖 참고 자료
-
 - [Azure Terraform Provider 문서](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs)
 - [OpenTofu 문서](https://opentofu.org/docs/)
 - [Azure Functions 문서](https://docs.microsoft.com/en-us/azure/azure-functions/)

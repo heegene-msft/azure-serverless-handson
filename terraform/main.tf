@@ -174,7 +174,7 @@ module "function_app" {
   # Function-specific settings
   runtime_version        = "~4"
   runtime_stack          = "python"
-  runtime_version_detail = "3.11"
+  runtime_version_detail = "3.11" # 파이썬 버전을 변경하실거면 여기서 바꾸시면 됩니다! 
 
   app_settings = {
     # Event Hub Settings - Azure AD Authentication (Managed Identity)

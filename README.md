@@ -1,6 +1,6 @@
 # Azure Serverless Hands-on
 
-IoT 텔레메트리 데이터 처리를 위한 Azure Serverless 아키텍처 실습 프로젝트입니다.  
+Azure Serverless 아키텍처 실습 핸즈온입니다. 가상의 디바이스가 보내는 텔레메트리 정보를 이벤트 기반으로 처리하는 시나리오입니다. 
 Event Hub, Azure Functions, Cosmos DB를 활용한 실시간 이벤트 처리 파이프라인을 구축합니다.
 
 ## 🏗️ 아키텍처
@@ -107,9 +107,13 @@ azure-serverless-handson/
 | **Azure CLI** | v2.50+ | Azure 인증 및 리소스 관리 |
 | **OpenTofu** | v1.6+ | 인프라 배포 (Terraform 호환) |
 | **Python** | v3.11 | Event Producer 실행 |
-| **Azure 구독** | Active | 리소스 프로비저닝 |
+| **Azure 구독** | 🫶💖💖 | 리소스 프로비저닝 |
 
 ### 1단계: 환경 설정
+
+혹시 opentofu/terraform 설치가 안 되어있다면:
+https://opentofu.org/docs/intro/install/
+
 
 ```bash
 # 리포지토리 클론
@@ -124,7 +128,7 @@ source venv/bin/activate  # Windows: venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-### 2단계: 인프라 배포 (One Command!)
+### 2단계: 인프라 배포 (요걸로 인프라 및 Azure Functions 배포가 완료됩니다.)
 
 ```bash
 cd terraform
@@ -142,9 +146,8 @@ tofu apply -auto-approve
 - ✅ Cosmos DB (serverless_db: devices, events, leases)
 - ✅ Function App (코드 자동 배포 포함!)
 - ✅ APIM + Storage + App Insights
-- ✅ Managed Identity 기반 인증 (Connection String 불필요)
 
-배포 시간: **약 5-10분**
+배포 시간: **약 10분**
 
 > 💡 자세한 내용은 [terraform/README.md](terraform/README.md) 참조
 
@@ -225,7 +228,7 @@ az cosmosdb sql container show \
   --query "resource.statistics.documentCount"
 ```
 
-## 📊 모니터링 및 디버깅
+## 모니터링 및 디버깅
 
 ### Application Insights 활용
 
@@ -288,10 +291,7 @@ def eventhub_trigger_processor(events, outputDocuments):
     # 3. Cosmos DB에 자동 저장 (Output Binding)
 ```
 
-**특징**:
-- ✅ 초당 수천 개 이벤트 처리
-- ✅ 배치 처리 지원 (cardinality="many")
-- ✅ Managed Identity 인증
+
 
 ### 2. Cosmos DB Change Feed (변경 감지)
 
@@ -308,13 +308,13 @@ def eventhub_trigger_processor(events, outputDocuments):
 def cosmosdb_changefeed_processor(documents):
     # 1. Cosmos DB 변경사항 실시간 감지
     # 2. 임계값 체크 (온도 > 40도)
-    # 3. 알림/로깅 (실제로는 다른 시스템 연동 가능)
+    # 3. 알림/로깅 (이 핸즈온에서 다루진 않겠지만, AI Search로 탑재한다든가 하는 연동 가능)
 ```
 
 **특징**:
-- ✅ 실시간 변경 감지 (1초 이내)
-- ✅ 재시작 시에도 위치 유지 (leases)
-- ✅ 2차 처리 파이프라인 구축 가능
+- 실시간 변경 감지 (1초 이내)
+- 재시작 시에도 위치 유지 (leases)
+- 2차 처리 파이프라인 구축 가능
 
 ### 3. HTTP Trigger (REST API)
 
@@ -349,100 +349,8 @@ event = {
 # Azure AD 인증으로 Event Hub에 전송
 ```
 
-**특징**:
-- ✅ Connection String 불필요 (Azure AD)
-- ✅ 배치 전송 지원
-- ✅ 샘플 데이터 자동 생성
-
-## 🛠️ 문제 해결 (Troubleshooting)
-
-### ❌ "No HTTP triggers found" 에러
-
-**원인**: Python v2 모델에서 여러 개의 `FunctionApp()` 인스턴스 생성  
-**해결**: `function_app.py`에 단일 `app` 인스턴스만 사용
-
-### ❌ Event Hub 이벤트를 Function이 받지 못함
-
-**확인 사항**:
-```bash
-# 1. Function App 설정 확인
-az functionapp config appsettings list \
-  --name serverless-handson-dev-func \
-  --resource-group serverless-handson-dev-rg \
-  | grep EventHub
-
-# 2. Event Hub에 실제로 메시지가 들어왔는지 확인
-az eventhubs eventhub show \
-  --resource-group serverless-handson-dev-rg \
-  --namespace-name serverless-handson-dev-eh \
-  --name telemetry_events
-```
-
-**해결**:
-- Function App의 `EventHubConnection__fullyQualifiedNamespace` 설정 확인
-- Managed Identity에 "Azure Event Hubs Data Receiver" 역할 할당 확인
-
-### ❌ Cosmos DB 권한 오류 (403 Forbidden)
-
-**원인**: Managed Identity에 데이터 플레인 권한 없음  
-**해결**:
-```bash
-# Cosmos DB Built-in Data Contributor 역할 확인
-az cosmosdb sql role assignment list \
-  --account-name serverless-handson-dev-cosmos \
-  --resource-group serverless-handson-dev-rg
-```
-
-### ❌ Change Feed가 "leases 컨테이너 없음" 에러
-
-**원인**: `leases` 컨테이너가 생성되지 않음  
-**해결**: `tofu apply`로 재배포하여 leases 컨테이너 생성
-
-### ❌ OpenTofu 배포 실패
-
-**일반적인 원인**:
-1. Azure CLI 인증 만료 → `az login` 재실행
-2. 구독 할당량 초과 → Portal에서 할당량 확인
-3. 리소스 이름 중복 → `terraform.tfvars`에서 `project_name` 변경
-
-```bash
-# Provider 캐시 정리 후 재시도
-rm -rf terraform/.terraform
-cd terraform && tofu init && tofu apply
-```
-
-## 🎓 학습 포인트
-
-### 이 프로젝트에서 배울 수 있는 것:
-
-1. **Infrastructure as Code (IaC)**
-   - OpenTofu로 Azure 리소스 자동 배포
-   - 모듈화된 인프라 설계
-   - State 관리 및 의존성 관리
-
-2. **Serverless 아키텍처**
-   - Event-driven 패턴 구현
-   - Azure Functions 트리거 종류별 활용
-   - Auto-scaling 및 비용 최적화
-
-3. **보안 Best Practices**
-   - Managed Identity로 Connection String 제거
-   - RBAC 기반 세밀한 권한 관리
-   - APIM을 통한 API 보안 계층
-
-4. **실시간 데이터 처리**
-   - Event Hub로 고성능 스트림 수집
-   - Cosmos DB Change Feed로 변경 감지
-   - 멀티스테이지 파이프라인 구축
-
-5. **Python v2 Programming Model**
-   - 데코레이터 기반 함수 정의
-   - Input/Output Bindings 활용
-   - 단일 파일 배포 구조
 
 ## 🧹 리소스 정리
-
-**⚠️ 주의**: 모든 데이터가 영구 삭제됩니다!
 
 ```bash
 cd terraform
@@ -451,42 +359,11 @@ cd terraform
 tofu destroy -auto-approve
 ```
 
-**삭제 시간**: 약 5-10분
+**삭제 시간**: 약 10분
 
-## 📚 참고 자료
-
-### Azure 공식 문서
-- [Azure Event Hubs](https://learn.microsoft.com/azure/event-hubs/)
-- [Azure Functions Python Guide](https://learn.microsoft.com/azure/azure-functions/functions-reference-python)
-- [Azure Functions Python v2 Model](https://learn.microsoft.com/azure/azure-functions/functions-reference-python?tabs=asgi%2Capplication-level)
-- [Cosmos DB Change Feed](https://learn.microsoft.com/azure/cosmos-db/change-feed)
-- [Managed Identity](https://learn.microsoft.com/azure/active-directory/managed-identities-azure-resources/overview)
-
-### Infrastructure as Code
-- [OpenTofu Documentation](https://opentofu.org/docs/)
-- [Azure Provider](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs)
-
-### 관련 GitHub 리포지토리
-- [Azure Functions Samples](https://github.com/Azure/azure-functions-python-samples)
-- [Azure Serverless Community Library](https://serverlesslibrary.net/)
-
-## 🤝 기여 (Contributing)
-
-Issue 및 Pull Request 환영합니다!
-
-### 개선 아이디어
-- [ ] Azure Service Bus 통합
-- [ ] Azure AI Search 인덱싱
-- [ ] Grafana 대시보드
-- [ ] GitHub Actions CI/CD
-- [ ] Azure Container Apps 마이그레이션
 
 ## 📄 라이선스
 
 MIT License
 
 ---
-
-**만든이**: [@heegene-msft](https://github.com/heegene-msft)  
-**프로젝트**: Azure Serverless Hands-on Workshop
-
