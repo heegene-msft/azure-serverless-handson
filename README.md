@@ -66,7 +66,7 @@ azure-serverless-handson/
 │   ├── main.tf                  # 메인 오케스트레이션
 │   ├── variables.tf             # 변수 정의
 │   ├── outputs.tf               # 출력 값
-│   ├── terraform.tfvars         # 변수 값 (gitignore)
+│   ├── terraform.tfvars         # 변수 값 (tofu plan & apply 전에 추가해 주셔야 합니다.)
 │   ├── backend.tf               # Remote state 설정
 │   ├── modules/                 # Infrastructure 모듈
 │   │   ├── resource_group/      # 리소스 그룹
@@ -133,13 +133,49 @@ pip install -r requirements.txt
 ```bash
 cd terraform
 
+
 # Azure 로그인
 az login
+
 
 # 인프라 배포 (초기화 + 배포 자동 실행)
 tofu init
 tofu apply -auto-approve
 ```
+
+tfvars(OpenTofu 환경변수) 적용을 위해 terraform.tfvars 라는 이름의 파일을 위의 프로젝트 구조를 참고하여 terraform/ 폴더 안에 생성합니다.
+
+```bash
+# ============================================================
+# 기본 변수 설정
+# ============================================================
+
+subscription_id = "여기에 Azure 구독 아이디를 넣어주세요!"  # Azure 구독 ID
+
+project_name = "serverless-handson" # 이름을 꼭! 유니크한 이름으로 바꿔주셔야 합니다. 이름이 겹치면, 생성되지 않습니다~
+environment  = "dev"
+location     = "koreacentral"
+
+# Custom tags
+tags = {
+  Purpose = "Azure Serverless handson"
+  Owner   = "DevTeam"
+}
+
+# Event Hub configuration
+eventhub_sku      = "Standard"
+eventhub_capacity = 1
+
+# Cosmos DB configuration
+cosmos_enable_free_tier = false  # Cosmos DB Free tier를 사용하시는 경우 true로 설정해 주세요. 구독 당 한 개만 가능합니다. 
+
+# API Management configuration
+apim_sku             = "Consumption_0"  # 비용 절감을 위한 Consumption 선택
+apim_publisher_name  = "Serverless Handson"
+apim_publisher_email = "publisher@example.com"  # 이메일을 변경해 주세요.
+
+```
+
 
 **배포 내용**:
 - ✅ Event Hub (telemetry_events, device_events)
